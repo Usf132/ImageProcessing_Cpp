@@ -176,22 +176,24 @@ public:
  */
 Image convertToGrayscale(const Image &input)
 {
+    if (input.getChannels() != 3)
+    {
+        cerr << "Error: convertToGrayscale expects a 3-channel RGB image\n";
+        return input; // return a copy unchanged
+    }
+
     int height = input.getHeight();
     int width = input.getWidth();
-    Image output(width, height, 1); // Single channel for grayscale
+    Image output(width, height, 1);
 
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
         {
-
             int R = input(y, x, 0);
             int G = input(y, x, 1);
             int B = input(y, x, 2);
-
-            int gray = (int)(0.299 * R + 0.587 * G + 0.114 * B);
-
-            output(y, x, 0) = gray;
+            output(y, x, 0) = (int)(0.299 * R + 0.587 * G + 0.114 * B);
         }
     }
 
@@ -352,9 +354,9 @@ Image applyBlur(const Image &input)
     int channels = input.getChannels();
     Image output(width, height, channels);
 
-    for (int y = 1; y <= height - 2; y++)
+    for (int y = 0; y < height; y++)
     {
-        for (int x = 1; x <= width - 2; x++)
+        for (int x = 0; x < width; x++)
         {
             for (int c = 0; c < channels; c++)
             {
@@ -363,7 +365,9 @@ Image applyBlur(const Image &input)
                 {
                     for (int kx = -1; kx <= 1; kx++)
                     {
-                        sum += input(y + ky, x + kx, c);
+                        int ny = max(0, min(height - 1, y + ky));
+                        int nx = max(0, min(width - 1, x + kx));
+                        sum += input(ny, nx, c);
                     }
                 }
                 output(y, x, c) = sum / 9;
@@ -389,7 +393,7 @@ Image rotate90(const Image &input)
     int height = input.getHeight();
     int width = input.getWidth();
     int channels = input.getChannels();
-    Image output(height, width, channels); // Width and height are swapped
+    Image output(height, width, channels); // output: width=height, height=width
 
     for (int y = 0; y < height; y++)
     {
